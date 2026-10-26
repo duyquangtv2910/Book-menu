@@ -1,687 +1,261 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#17130f">
-  <title>Cuốn sách của Quang</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gắn Logo Tiệm Nail - Chị Hai</title>
   <style>
     :root {
-      color-scheme: dark;
-      font-family: Georgia, "Times New Roman", serif;
-      background: #17130f;
-      color: #f7f0e5;
-      font-synthesis: none;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-      --gold: #d3ae72;
-      --muted: #b1a392;
+      --bg-color: #f9f5f7; /* Nền chung trang */
+      --card-bg: #ffffff;
+      --primary: #d63384;
+      --text-main: #212529;
+      --border-radius: 12px;
     }
 
-    * { box-sizing: border-box; }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    
     body {
-      min-width: 320px;
-      min-height: 100vh;
-      margin: 0;
-      background:
-        radial-gradient(ellipse at 50% 39%, rgb(117 77 39 / 22%), transparent 52%),
-        radial-gradient(ellipse at 50% 100%, rgb(0 0 0 / 45%), transparent 60%),
-        #17130f;
-    }
-
-    button { font: inherit; }
-
-    .reader {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.5;
       display: flex;
-      width: 100%;
-      min-height: 100vh;
       flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header { padding: 20px; text-align: center; background: #fff; border-bottom: 1px solid #eee; }
+    .eyebrow { color: var(--primary); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; }
+    h1 { margin: 8px 0; font-size: 1.8rem; }
+    
+    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; max-width: 1000px; margin: 0 auto; width: 100%; gap: 20px; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .workspace { grid-template-columns: 2fr 1fr; }
+    }
+
+    /* Khu vực xem trước & Canvas */
+    .preview-card, .control-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background-color: #f0f0f0;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 22px;
-      padding: 34px 24px 26px;
-    }
-
-    .heading { text-align: center; }
-
-    .eyebrow {
-      margin: 0 0 7px;
-      color: var(--gold);
-      font: 600 10px/1.4 Arial, sans-serif;
-      letter-spacing: .34em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(23px, 3vw, 34px);
-      font-weight: 400;
-      letter-spacing: .015em;
-    }
-
-    .hint {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font: 13px/1.5 Arial, sans-serif;
-    }
-
-    .book-wrap {
       position: relative;
-      width: min(100%, 1000px);
-      perspective: 2300px;
-      filter: drop-shadow(0 28px 24px rgb(0 0 0 / 48%));
-    }
-
-    .book {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1.42;
-      overflow: visible;
-      transform-style: preserve-3d;
-      border-radius: 3px;
-      background: #eee3d1;
-      box-shadow: 0 0 0 1px rgb(222 197 158 / 24%), 0 2px 8px #000;
-    }
-
-    .book.is-closed,
-    .book.is-final {
-      background: transparent;
-      box-shadow: none;
-    }
-
-    .spread {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
       overflow: hidden;
-      border-radius: 3px;
-      background: #f4ead9;
-    }
-
-    .spread-page {
-      position: relative;
-      min-width: 0;
-      overflow: hidden;
-      background: #f4ead9;
-    }
-
-    .spread-page img,
-    .page-face img,
-    .final-cover img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: fill;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .spread-page.left {
-      box-shadow: inset -15px 0 20px -20px #2f2317;
-    }
-
-    .spread-page.right {
-      box-shadow: inset 15px 0 20px -20px #2f2317;
-    }
-
-    .spine {
-      position: absolute;
-      z-index: 2;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 20px;
-      pointer-events: none;
-      transform: translateX(-50%);
-      background: linear-gradient(90deg, transparent, rgb(45 31 18 / 19%), transparent);
-    }
-
-    .sheet {
-      position: absolute;
-      z-index: 4;
-      top: 0;
-      left: 50%;
-      width: 50%;
-      height: 100%;
-      transform: rotateY(0);
-      transform-origin: left center;
-      transform-style: preserve-3d;
-      transition: left 1050ms cubic-bezier(.62, .04, .29, 1), transform 1050ms cubic-bezier(.62, .04, .29, 1);
-      will-change: transform;
-    }
-
-    .sheet.is-turning { transform: rotateY(-180deg); }
-    .sheet.is-reversing-start { transition: none; transform: rotateY(180deg); }
-    .sheet.is-reversing { transform: rotateY(0deg); }
-
-    .page-face {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      backface-visibility: hidden;
-      background: #f4ead9;
-    }
-
-    .page-face.front {
-      box-shadow: inset 12px 0 18px -17px #27190d;
-    }
-
-    .page-face.back {
-      transform: rotateY(180deg);
-      box-shadow: inset -12px 0 18px -17px #27190d;
-    }
-
-    .cover {
-      z-index: 6;
-      left: 50%;
-      box-shadow: 8px 1px 16px rgb(0 0 0 / 32%);
-    }
-
-    .cover .front {
-      border: 1px solid rgb(54 30 16 / 40%);
-      border-radius: 3px;
-    }
-
-    .cover .back { background: #f1e5d2; }
-
-    .final-sheet {
-      z-index: 5;
-      display: none;
-      box-shadow: -8px 1px 16px rgb(0 0 0 / 32%);
-    }
-
-    .final-cover {
-      position: absolute;
-      z-index: 7;
-      inset: 0 25%;
-      display: none;
-      overflow: hidden;
-      border: 1px solid rgb(54 30 16 / 40%);
-      border-radius: 3px;
-      box-shadow: 8px 1px 16px rgb(0 0 0 / 28%);
-    }
-
-    .book.is-closed .spread,
-    .book.is-closed .spine {
-      visibility: hidden;
-    }
-
-    .book.is-opening .spread,
-    .book.is-opening .spine {
-      visibility: visible;
-    }
-
-    .book.is-closed .cover { left: 25%; }
-    .book.is-closed.is-opening .cover { left: 50%; }
-    .book:not(.is-closed) .cover {
-      left: 50%;
-      transform: rotateY(-180deg);
-    }
-    .book:not(.is-closed) .spread { z-index: 2; }
-    .book:not(.is-closed) .cover { z-index: 1; }
-    .book.is-final .spread,
-    .book.is-final .spine { visibility: hidden; }
-    .book.is-final .cover { visibility: hidden; }
-    .book.is-final .final-cover { display: block; }
-    .book.is-closing .final-sheet { display: block; }
-    #turnSheet { visibility: hidden; }
-    .book.is-page-turn #turnSheet { visibility: visible; }
-
-    .hand {
-      position: absolute;
-      z-index: 9;
-      top: 10%;
-      left: 61%;
-      width: 22%;
-      height: 34%;
-      overflow: visible;
-      pointer-events: none;
-      filter: drop-shadow(2px 5px 4px rgb(0 0 0 / 28%));
-      transform: rotate(-12deg);
-      transform-origin: 78% 15%;
-      transition: opacity 240ms ease, transform 500ms ease;
-    }
-
-    .book:not(.is-closed) .hand,
-    .book.is-final .hand { opacity: 0; }
-
-    .book.is-opening .hand {
-      opacity: 0;
-      transform: translate(-18px, 18px) rotate(-24deg);
-    }
-
-    .hand path { stroke: #88533e; stroke-width: 1.4; }
-
-    .book.is-opening .cover,
-    .cover.is-turning,
-    .final-sheet.is-turning { transform: rotateY(-180deg); }
-    .book.is-covering:not(.is-closed) .cover {
-      left: 25%;
-      z-index: 6;
-      transform: rotateY(0);
-    }
-    .book.is-covering:not(.is-closed) .hand { opacity: 1; }
-
-    .book.is-turning .spread-page { pointer-events: none; }
-
-    .reader-controls {
-      display: grid;
-      width: min(100%, 520px);
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .control {
-      display: inline-flex;
-      min-height: 44px;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      padding: 0 17px;
-      border: 1px solid rgb(211 174 114 / 43%);
-      border-radius: 3px;
-      background: rgb(255 255 255 / 3%);
-      color: #f7f0e5;
       cursor: pointer;
-      font: 600 12px/1 Arial, sans-serif;
-      letter-spacing: .04em;
-      transition: background 160ms ease, border-color 160ms ease, opacity 160ms ease;
     }
 
-    .control:hover:not(:disabled) {
-      border-color: var(--gold);
-      background: rgb(211 174 114 / 12%);
+    canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    .empty-state { text-align: center; padding: 20px; color: #666; }
+    
+    /* Thanh công cụ bên phải (dưới cùng trên mobile) */
+    @media (min-width: 768px) {
+      .control-card { position: sticky; top: 20px; align-self: start; }
     }
 
-    .control:focus-visible {
-      outline: 2px solid var(--gold);
-      outline-offset: 3px;
+    /* === BỔ SUNG YÊU CẦU CỦA BẠN: CHUYỂN NỀN XANH NHẠT Ở KHU VỰC DƯỚI/CÁNH TAY PHẢI === */
+    .control-card {
+      background-color: #e3f2fd !important; /* Xanh nhạt pastel theo yêu cầu */
+      border: 1px solid #bbdefb;
     }
 
-    .control:disabled {
-      cursor: not-allowed;
-      opacity: .38;
+    h2 { margin-bottom: 16px; font-size: 1.2rem; color: #0d47a1; }
+    
+    .control-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .field-label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
+    
+    .logo-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
     }
 
-    .control.next { justify-self: end; }
-    .control.previous { justify-self: start; }
-
-    .control svg {
-      width: 16px;
-      height: 16px;
-      fill: none;
-      stroke: currentColor;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 1.7;
+    .logo-option {
+      aspect-ratio: 1/1;
+      background: #fff;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: #666;
     }
 
-    .progress {
-      min-width: 120px;
-      text-align: center;
-      font: 11px/1.5 Arial, sans-serif;
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;
     }
+    .btn-primary { background: var(--primary); color: #fff; margin-top: 15px; }
+    .btn-secondary { background: #e9ecef; color: #333; margin-top: 8px; }
+    
+    input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
-    .progress-label {
-      display: block;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .progress-track {
-      width: 100%;
-      height: 2px;
-      margin-top: 7px;
-      overflow: hidden;
-      background: rgb(255 255 255 / 13%);
-    }
-
-    .progress-bar {
-      width: 0;
-      height: 100%;
-      background: var(--gold);
-      transition: width 350ms ease;
-    }
-
-    .status {
-      min-height: 16px;
-      margin: -13px 0 0;
-      color: #e5b9a4;
-      font: 12px/1.4 Arial, sans-serif;
-      text-align: center;
-    }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      clip-path: inset(50%);
-    }
-
-    @media (max-width: 600px) {
-      .reader {
-        justify-content: center;
-        gap: 18px;
-        padding: 24px 12px 18px;
-      }
-
-      .book-wrap { width: 100%; }
-      .reader-controls { width: 100%; gap: 8px; }
-      .control { min-height: 42px; padding: 0 11px; font-size: 11px; }
-      .progress { min-width: 105px; }
-      .hint { max-width: 320px; margin-right: auto; margin-left: auto; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        scroll-behavior: auto !important;
-        transition-duration: .01ms !important;
-      }
-    }
+    /* Ẩn file upload gốc */
+    #imageInput, #noteInput { display: none; }
   </style>
 </head>
 <body>
-  <main class="reader">
-    <header class="heading">
-      <p class="eyebrow">Một cuốn sách dành riêng cho bạn</p>
-      <h1>Book Menu</h1>
-      <p class="hint">Nhấn “Mở sách” hoặc dùng phím mũi tên để lật từng trang.</p>
-    </header>
 
-    <div class="book-wrap">
-      <div class="book is-closed" id="book" aria-label="Sách tương tác">
-        <div class="spread" aria-live="polite">
-          <div class="spread-page left">
-            <img id="leftPage" alt="Trang bên trái">
-          </div>
-          <div class="spread-page right">
-            <img id="rightPage" alt="Trang bên phải">
-          </div>
-          <div class="spine"></div>
+<header>
+  <div class="eyebrow">Trang web gắn Logo cho tiệm nail</div>
+  <h1 id="page-title">Chị Hai chọn một ảnh nail bất kỳ</h1>
+  <p>Chọn cả logo tiệm và số phone, rồi đặt từng logo lên ảnh theo ý chị Hai.</p>
+</header>
+
+<main>
+  <section class="workspace">
+    <!-- Khu vực chính: Xem trước ảnh -->
+    <section id="previewSection" class="preview-card">
+      <div id="dropZone" class="canvas-wrap" aria-label="Kéo thả ảnh vào đây hoặc nhấn chọn">
+        <div id="emptyState" class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+          <strong style="display:block; margin:10px 0;">Ảnh của bạn sẽ xuất hiện ở đây</strong>
+          <button class="btn btn-secondary" id="emptyChooseButton">Chọn ảnh từ thiết bị</button>
         </div>
-
-        <div class="sheet cover" id="frontCover" aria-hidden="true">
-          <div class="page-face front"><img src="A-01.png" alt=""></div>
-          <div class="page-face back"></div>
-        </div>
-
-        <div class="sheet" id="turnSheet" aria-hidden="true">
-          <div class="page-face front"><img id="turnFront" alt=""></div>
-          <div class="page-face back"><img id="turnBack" alt=""></div>
-        </div>
-
-        <div class="sheet final-sheet" id="finalSheet" aria-hidden="true">
-          <div class="page-face front"><img src="A-18.png" alt=""></div>
-          <div class="page-face back"></div>
-        </div>
-
-        <div class="final-cover" id="finalCover" aria-hidden="true">
-          <img src="A-18.png" alt="">
-        </div>
-
-        <svg class="hand" viewBox="0 0 180 170" aria-hidden="true">
-          <defs>
-            <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#f3c9aa"/>
-              <stop offset="1" stop-color="#d99a78"/>
-            </linearGradient>
-          </defs>
-          <path
-            d="M126 156 91 148 76 125 72 84 65 56Q63 47 69 44q7-3 11 6l10 20-5-48q-1-10 7-11 8 0 9 10l6 41 1-48q0-10 8-10 8 1 8 11l-1 52 5-39q1-9 9-8 8 2 6 12l-5 47 5-21q2-9 9-7 8 2 5 12l-8 44 10 41Z"
-            fill="url(#skin)"/>
-          <path d="m94 83 3 34m18-40-1 36m17-25-5 27" fill="none" stroke="#c98268" stroke-linecap="round" stroke-width="2"/>
-        </svg>
+        <canvas id="previewCanvas" aria-label="Ảnh xem trước sau khi gắn logo"></canvas>
       </div>
-    </div>
+    </section>
 
-    <nav class="reader-controls" aria-label="Điều khiển lật sách">
-      <button class="control previous" id="previousButton" type="button" disabled>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg>
-        <span id="previousLabel">Trước</span>
-      </button>
-
-      <div class="progress" aria-live="polite">
-        <span class="progress-label" id="progressLabel">Bìa trước</span>
-        <div class="progress-track" aria-hidden="true">
-          <div class="progress-bar" id="progressBar"></div>
+    <!-- Khu vực điều khiển bên phải (Dưới cùng trên mobile) -->
+    <aside class="control-card">
+      <h2>Tùy chỉnh</h2>
+      
+      <section class="control-section">
+        <span class="field-label">Logo : chị Hai chọn 1 trong các logo dưới nha</span>
+        <div id="logoGallery" class="logo-gallery" role="group">
+          <!-- Logo mẫu placeholder -->
+          <div class="logo-option" data-src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIiAvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvZ28gMTwvdGV4dD48L3N2Zz4=">Logo 1</div>
+          <div class="logo-option" data-src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIiAvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvZ28gMjwvdGV4dD48L3N2Zz4=">Logo 2</div>
+          <button class="btn btn-secondary" id="clearLogoButton" disabled>Bỏ chọn Logo</button>
         </div>
-      </div>
+      </section>
 
-      <button class="control next" id="nextButton" type="button">
-        <span id="nextLabel">Mở sách</span>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"/></svg>
+      <section class="control-section">
+        <label class="field-label" for="opacityInput">Độ mờ Logo: <span id="opacityValue">100%</span></label>
+        <input id="opacityInput" type="range" min="20" max="100" value="100">
+      </section>
+
+      <button id="downloadButton" class="btn btn-primary" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="vertical-align:middle; margin-right:8px;"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"></path></svg>
+        Tải ảnh đã ghép
       </button>
-    </nav>
-    <p class="status" id="status" role="status"></p>
-  </main>
+      
+      <p style="margin-top:15px; font-size:0.8rem; color:#666; text-align:center;">
+        🛡️ Ảnh được xử lý ngay trên thiết bị của bạn, không tải lên máy chủ.
+      </p>
+    </aside>
+  </section>
 
-  <script>
-    (() => {
-      const spreads = [
-        ["A-02.png", "A-03.png"],
-        ["A-04.png", "A-05.png"],
-        ["A-06.png", "A-07.png"],
-        ["A-08.png", "A-09.png"],
-        ["A-10.png", "A-11.png"],
-        ["A-12.png", "A-13.png"],
-        ["A-14.png", "A-15.png"],
-        ["A-16.png", "A-17.png"]
-      ];
-      const labels = [
-        "Bìa trước",
-        ...spreads.map(([left], index) => `Trang ${index * 2 + 2}–${index * 2 + 3}`),
-        "Bìa sau"
-      ];
+  <!-- Input ẩn để nhận file -->
+  <input id="imageInput" type="file" accept="image/*">
+</main>
 
-      const book = document.getElementById("book");
-      const leftPage = document.getElementById("leftPage");
-      const rightPage = document.getElementById("rightPage");
-      const turnSheet = document.getElementById("turnSheet");
-      const turnFront = document.getElementById("turnFront");
-      const turnBack = document.getElementById("turnBack");
-      const cover = document.getElementById("frontCover");
-      const finalSheet = document.getElementById("finalSheet");
-      const previousButton = document.getElementById("previousButton");
-      const nextButton = document.getElementById("nextButton");
-      const previousLabel = document.getElementById("previousLabel");
-      const nextLabel = document.getElementById("nextLabel");
-      const progressLabel = document.getElementById("progressLabel");
-      const progressBar = document.getElementById("progressBar");
-      const status = document.getElementById("status");
-      let spreadIndex = -1;
-      let busy = false;
-      let isFinal = false;
-      const loadedImages = new Map();
+<script>
+  // Logic xử lý cơ bản dựa trên đoạn code bạn cung cấp
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  let photo = null;
+  let layers = { logo: { centerX: 0, centerY: 0, scale: 1, opacity: 1 } };
 
-      function loadImage(file) {
-        if (!loadedImages.has(file)) {
-          loadedImages.set(file, new Promise((resolve, reject) => {
-            const image = new Image();
-            image.onload = () => resolve(file);
-            image.onerror = () => reject(new Error(`Không tải được ${file}. Hãy giữ tệp này cùng thư mục với index.html.`));
-            image.src = file;
-          }));
-        }
-        return loadedImages.get(file);
-      }
+  // Xử lý upload ảnh
+  const imageInput = document.getElementById('imageInput');
+  const dropZone = document.getElementById('dropZone');
+  
+  function loadImageFile(file) {
+    if (!file || !file.type.startsWith("image/")) return alert("Vui lòng chọn tệp hình ảnh.");
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      photo = img;
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      drawCanvas();
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('downloadButton').disabled = false;
+    };
+    img.src = url;
+  }
 
-      function updateControls() {
-        const progressIndex = isFinal ? labels.length - 1 : spreadIndex + 1;
-        progressLabel.textContent = labels[progressIndex];
-        progressBar.style.width = `${progressIndex / (labels.length - 1) * 100}%`;
-        previousLabel.textContent = spreadIndex < 0 ? "Trước" : "Trang trước";
-        nextLabel.textContent = spreadIndex < 0 ? "Mở sách" : spreadIndex === spreads.length - 1 ? "Đóng sách" : "Lật trang";
-        previousButton.disabled = busy || (spreadIndex < 0 && !isFinal);
-        nextButton.disabled = busy || isFinal;
-        previousButton.setAttribute("aria-label", spreadIndex < 0 ? "Chưa có trang trước" : "Lật về trang trước");
-        nextButton.setAttribute("aria-label", nextLabel.textContent);
-      }
+  dropZone.addEventListener('click', () => imageInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor='#0d47a1'; });
+  dropZone.addEventListener('dragleave', () => dropZone.style.borderColor='#ccc');
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.style.borderColor='#ccc';
+    if(e.dataTransfer.files[0]) loadImageFile(e.dataTransfer.files[0]);
+  });
+  imageInput.addEventListener('change', () => {
+    if(imageInput.files[0]) loadImageFile(imageInput.files[0]);
+  });
 
-      function showSpread(index) {
-        leftPage.src = spreads[index][0];
-        rightPage.src = spreads[index][1];
-        leftPage.alt = `Trang ${index * 2 + 2}`;
-        rightPage.alt = `Trang ${index * 2 + 3}`;
-      }
+  // Vẽ canvas
+  function drawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!photo) return;
+    
+    ctx.drawImage(photo, 0, 0, canvas.width, canvas.height);
+    
+    // Vẽ logo mẫu nếu có chọn (demo placeholder)
+    const logoCanvas = document.createElement('canvas');
+    logoCanvas.width = 200; logoCanvas.height = 200;
+    const lctx = logoCanvas.getContext('2d');
+    lctx.fillStyle = "rgba(255,0,150,0.7)";
+    lctx.font = "bold 30px sans-serif";
+    lctx.fillText("NAIL ART", 40, 110);
+    
+    ctx.save();
+    ctx.globalAlpha = layers.logo.opacity;
+    ctx.drawImage(logoCanvas, layers.logo.centerX - 100, layers.logo.centerY - 50, 200 * layers.logo.scale, 100 * layers.logo.scale);
+    ctx.restore();
+  }
 
-      function waitForFlip(sheet) {
-        return new Promise(resolve => {
-          let finished = false;
-          const finish = event => {
-            if (event && (event.target !== sheet || event.propertyName !== "transform")) return;
-            if (finished) return;
-            finished = true;
-            sheet.removeEventListener("transitionend", finish);
-            clearTimeout(fallback);
-            resolve();
-          };
-          const fallback = setTimeout(finish, 1250);
-          sheet.addEventListener("transitionend", finish);
-        });
-      }
+  // Cập nhật độ mờ
+  document.getElementById('opacityInput').addEventListener('input', (e) => {
+    const val = e.target.value;
+    layers.logo.opacity = val / 100;
+    document.getElementById('opacityValue').textContent = val + '%';
+    drawCanvas();
+  });
 
-      async function prepare(files) {
-        status.textContent = "Đang chuẩn bị trang sách…";
-        await Promise.all(files.map(loadImage));
-        status.textContent = "";
-      }
+  // Chọn logo mẫu
+  document.querySelectorAll('.logo-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('.logo-option').forEach(o => o.style.borderColor='transparent');
+      opt.style.borderColor='#0d47a1';
+      layers.logo.centerX = photo ? photo.width * 0.5 : canvas.width/2;
+      layers.logo.centerY = photo ? photo.height * 0.8 : canvas.height/2;
+      drawCanvas();
+    });
+  });
 
-      async function nextPage() {
-        if (busy || isFinal) return;
-        busy = true;
-        updateControls();
-        try {
-          if (spreadIndex < 0) {
-            await prepare(["A-01.png", "A-02.png", "A-03.png"]);
-            showSpread(0);
-            book.classList.add("is-opening");
-            void cover.offsetWidth;
-            cover.classList.add("is-turning");
-            await waitForFlip(cover);
-            book.classList.remove("is-closed", "is-opening");
-            cover.classList.remove("is-turning");
-            spreadIndex = 0;
-          } else if (spreadIndex < spreads.length - 1) {
-            const current = spreadIndex;
-            const next = current + 1;
-            await prepare([spreads[current][1], spreads[next][0], spreads[next][1]]);
-            leftPage.src = spreads[current][0];
-            rightPage.src = spreads[next][1];
-            turnFront.src = spreads[current][1];
-            turnBack.src = spreads[next][0];
-            turnSheet.classList.remove("is-reversing");
-            turnSheet.classList.add("is-turning");
-            book.classList.add("is-turning", "is-page-turn");
-            await waitForFlip(turnSheet);
-            turnSheet.classList.remove("is-turning");
-            book.classList.remove("is-turning", "is-page-turn");
-            showSpread(next);
-            spreadIndex = next;
-          } else {
-            await prepare(["A-18.png"]);
-            book.classList.add("is-closing");
-            finalSheet.classList.add("is-turning");
-            book.classList.add("is-turning");
-            await waitForFlip(finalSheet);
-            book.classList.remove("is-turning", "is-closing");
-            book.classList.add("is-final");
-            isFinal = true;
-          }
-        } catch (error) {
-          status.textContent = error.message;
-        } finally {
-          busy = false;
-          updateControls();
-        }
-      }
+  // Tải ảnh
+  document.getElementById('downloadButton').addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'nail-logo-final.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+</script>
 
-      async function previousPage() {
-        if (busy) return;
-        if (isFinal) {
-          isFinal = false;
-          book.classList.remove("is-final");
-          spreadIndex = spreads.length - 1;
-          finalSheet.classList.remove("is-turning");
-          showSpread(spreadIndex);
-          updateControls();
-          return;
-        }
-        if (spreadIndex < 0) return;
-
-        busy = true;
-        updateControls();
-        try {
-          if (spreadIndex === 0) {
-            book.classList.add("is-covering");
-            await waitForFlip(cover);
-            book.classList.remove("is-covering");
-            book.classList.add("is-closed");
-            spreadIndex = -1;
-            return;
-          }
-
-          const current = spreadIndex;
-          const previous = current - 1;
-          await prepare([spreads[previous][0], spreads[previous][1], spreads[current][0]]);
-          leftPage.src = spreads[previous][0];
-          rightPage.src = spreads[current][1];
-          turnFront.src = spreads[previous][1];
-          turnBack.src = spreads[current][0];
-          turnSheet.classList.remove("is-turning", "is-reversing");
-          turnSheet.classList.add("is-reversing-start");
-          book.classList.add("is-turning", "is-page-turn");
-          void turnSheet.offsetWidth;
-          turnSheet.classList.remove("is-reversing-start");
-          turnSheet.classList.add("is-reversing");
-          await waitForFlip(turnSheet);
-          turnSheet.classList.remove("is-reversing");
-          book.classList.remove("is-turning", "is-page-turn");
-          showSpread(previous);
-          spreadIndex = previous;
-        } catch (error) {
-          status.textContent = error.message;
-        } finally {
-          busy = false;
-          updateControls();
-        }
-      }
-
-      nextButton.addEventListener("click", nextPage);
-      previousButton.addEventListener("click", previousPage);
-
-      document.addEventListener("keydown", event => {
-        if (event.altKey || event.ctrlKey || event.metaKey) return;
-        if (event.target instanceof HTMLElement && ["BUTTON", "INPUT", "TEXTAREA"].includes(event.target.tagName)) return;
-        if (event.key === "ArrowRight") {
-          event.preventDefault();
-          nextPage();
-        } else if (event.key === "ArrowLeft") {
-          event.preventDefault();
-          previousPage();
-        }
-      });
-
-      let touchStartX = null;
-      book.addEventListener("touchstart", event => {
-        touchStartX = event.changedTouches[0].clientX;
-      }, { passive: true });
-      book.addEventListener("touchend", event => {
-        if (touchStartX === null) return;
-        const distance = event.changedTouches[0].clientX - touchStartX;
-        touchStartX = null;
-        if (distance < -45) nextPage();
-        if (distance > 45) previousPage();
-      }, { passive: true });
-
-      loadImage("A-01.png").catch(error => { status.textContent = error.message; });
-      updateControls();
-    })();
-  </script>
 </body>
 </html>
